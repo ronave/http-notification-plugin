@@ -11,6 +11,7 @@
 		<rundeck-core.version>3.0.13-20190123</rundeck-core.version>
 		<unirest.version>1.4.9</unirest.version>
 		<rundeck-plugin.version>1.2</rundeck-plugin.version>
+		<powermock.version>1.7.1</powermock.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -26,9 +27,16 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
-		    <groupId>junit</groupId>
-		    <artifactId>junit</artifactId>
-		    <version>4.12</version>
+		   <groupId>org.powermock</groupId>
+		   <artifactId>powermock-module-junit4</artifactId>
+		   <version>${powermock.version}</version>
+		   <scope>test</scope>
+		</dependency>
+		<dependency>
+		   <groupId>org.powermock</groupId>
+		   <artifactId>powermock-api-mockito</artifactId>
+		   <version>${powermock.version}</version>
+		   <scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>
@@ -45,6 +53,7 @@
 							<outputDirectory>${project.build.directory}/classes/lib</outputDirectory>
 							<excludeTransitive>false</excludeTransitive>
 							<excludeScope>provided</excludeScope>
+							<includeScope>runtime</includeScope>
 						</configuration>
 					</execution>
 				</executions>

@@ -43,7 +43,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 	private String body;
 	
 	@PluginProperty(name="contentType",title="Content Type", description="Mandatory when using POST request")
-	@SelectValues(values={"application/json", "application/xml"}, freeSelect=true)
+	@SelectValues(values={"application/json", "application/xml"}, freeSelect=false)
 	private String contentType;
 	
 	/**
@@ -70,7 +70,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 		System.out.println("Configuration : " + config);
 		boolean isOk = true;
 		if(isOk = validateInputs()) {
-			isOk = sendRquest();
+			isOk = sendRequest();
 		}
 		return isOk;
 	}
@@ -94,7 +94,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
      * Performs the request
      * @return true if ok 
      */
-	private boolean sendRquest() {
+	private boolean sendRequest() {
 		try {
 			HttpResponse<JsonNode> response = null;
 			if(this.methodType.equals(HttpMethod.POST.toString())) {
@@ -114,7 +114,9 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 	}
 
 	/**
-     * It handles the response, anything but status 200 is considered wrong
+     * It handles the response, anything but status 200 is considered an error and it will as such
+     * @param response , response from the requested url
+     * @return true if ok 
      */
 	private boolean handleResponse(HttpResponse<JsonNode> response) {
 		if(response != null && HttpStatus.SC_OK == response.getStatus()) {
@@ -125,6 +127,6 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 			System.err.println("Error sending notification : " + response.getBody());
 			return false;
 		}
-		
 	}
+	
 }
