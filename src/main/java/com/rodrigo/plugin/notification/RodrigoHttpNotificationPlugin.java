@@ -38,11 +38,11 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 	@PluginProperty(name="url", title="URL", description="URL for the notification", required=true)
 	private String url;
 
-	@PluginProperty(name="body",title="Body", description="Mandatory when using POST request")
+	@PluginProperty(name="body",title="Body", description="Mandatory when using POST request, otherwise will just be ignored")
 	@TextArea
 	private String body;
 	
-	@PluginProperty(name="contentType",title="Content Type", description="Mandatory when using POST request")
+	@PluginProperty(name="contentType",title="Content Type", description="Mandatory when using POST request, otherwise will just be ignored", required=true)
 	@SelectValues(values={"application/json", "application/xml"}, freeSelect=false)
 	private String contentType;
 	
