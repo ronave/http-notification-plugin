@@ -1,7 +1,7 @@
 # http-notification-plugin
 
 This is a simple http notification plugin for rundeck.
-It uses unirest library to perform the request
+It uses apache httpclient library to perform the request
 
 ## Features
 
