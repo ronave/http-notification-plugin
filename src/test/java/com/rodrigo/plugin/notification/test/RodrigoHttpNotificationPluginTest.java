@@ -21,7 +21,7 @@ public class RodrigoHttpNotificationPluginTest {
 
 	@Test
 	public void notificationTestGET() throws Exception {
-		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null));
+		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true));
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "validateInputs")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
@@ -30,7 +30,7 @@ public class RodrigoHttpNotificationPluginTest {
 	
 	@Test
 	public void notificationTestGETWithError() throws Exception {
-		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null));
+		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true));
 		PowerMockito.doReturn(false).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "validateInputs")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
@@ -39,7 +39,7 @@ public class RodrigoHttpNotificationPluginTest {
 	
 	@Test
 	public void notificationTestGETWithError2() throws Exception {
-		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null));
+		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true));
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
 		PowerMockito.doReturn(false).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "validateInputs")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
@@ -49,7 +49,7 @@ public class RodrigoHttpNotificationPluginTest {
 	@Test
 	public void notificationTestPOST() throws Exception {
 		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("POST", "http://localhost:8080/greeting", 
-				"{\"id\": 3,\"content\": \"Hello, World!\"}", "application/json"));
+				"{\"id\": 3,\"content\": \"Hello, World!\"}", "application/json", true));
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertTrue(postNotification);
@@ -58,7 +58,25 @@ public class RodrigoHttpNotificationPluginTest {
 	@Test
 	public void notificationTestPOSTNoBody() throws Exception {
 		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("POST", "http://localhost:8080/greeting", 
-				"", "application/json"));
+				"", "application/json", true));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
+		assertFalse(postNotification);
+	}
+	
+	@Test
+	public void notificationTestGETNoUrl() throws Exception {
+		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("GET", null, 
+				"", "application/json", true));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
+		assertFalse(postNotification);
+	}
+	
+	@Test
+	public void notificationTestPOSTNoUrl() throws Exception {
+		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("POST", null, 
+				"", "application/json", true));
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertFalse(postNotification);
@@ -68,7 +86,7 @@ public class RodrigoHttpNotificationPluginTest {
 	//So you can use this as an example :)
 //	@Test
 //	public void postNotificationTestGET() {
-//		RodrigoHttpNotificationPlugin plugin = new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null);
+//		RodrigoHttpNotificationPlugin plugin = new RodrigoHttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true);
 //		assertTrue(plugin.postNotification(new String(), new HashedMap(), new HashedMap()));
 //	}
 //	
@@ -79,7 +97,7 @@ public class RodrigoHttpNotificationPluginTest {
 //				"<greeting>\r\n" + 
 //				"   <content>Hello, World!</content>\r\n" + 
 //				"   <id>3</id>\r\n" + 
-//				"</greeting>", "application/xml");
+//				"</greeting>", "application/xml", true);
 //		assertTrue(plugin.postNotification(new String(), new HashedMap(), new HashedMap()));
 //	}
 	

@@ -25,8 +25,8 @@ import com.dtolabs.rundeck.plugins.notification.NotificationPlugin;
 
 /**
  * Developed by RoNaVe
- * Notification plugin that can handle POST ot GET request.
- * Body for POST request are only xml and json
+ * Notification plugin that can handle POST or GET request.
+ * Body for POST request are only xml or json
  */
 @Plugin(service=ServiceNameConstants.Notification, name="RodrigoNotificationPlugin")
 @PluginDescription(title="Rodrigo Http Notification", description="Http notification plugin.")
@@ -53,17 +53,26 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 	private String contentType;
 	
 	/**
+     * If not selected, will only log errors
+     */
+	@PluginProperty(name="debugFlag",title="Debug Flag", description="Check to obtain more details about the execution", defaultValue="false")
+	@com.dtolabs.rundeck.plugins.descriptions.SelectValues(values={"true"}, dynamicValues=true)
+	private boolean debugFlag;
+	
+	
+	/**
      * Constructor for better junit.
      * @param methodType {"POST","GET"}
      * @param url Remote url where the request will be send
      * @param body To be used along with the POST method
      * @param contentType To be used along with the POST method
      */
-	public RodrigoHttpNotificationPlugin(String methodType, String url, String body, String contentType) {
+	public RodrigoHttpNotificationPlugin(String methodType, String url, String body, String contentType, boolean debugFlag) {
 		this.methodType = methodType;
 		this.url = url;
 		this.body = body;
 		this.contentType = contentType;
+		this.debugFlag = debugFlag;
 	}
 
 	public RodrigoHttpNotificationPlugin() {
@@ -72,8 +81,8 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 
 	@SuppressWarnings("rawtypes")
 	public boolean postNotification(String trigger, Map executionData, Map config) {
-		System.out.println("Event trigger : " + trigger);
-		System.out.println("Configuration : " + config);
+		sendToPrint("Event trigger : " + trigger);
+		sendToPrint("Configuration : " + config);
 		boolean isOk = true;
 		if(isOk = validateInputs()) {
 			isOk = sendRequest();
@@ -88,11 +97,16 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 	private boolean validateInputs() {
 		boolean isValid = true;
 		if("POST".equals(this.methodType)) {
-			if(this.body.trim().isEmpty() || this.contentType.trim().isEmpty()) {
+			if(this.body == null || this.body.trim().isEmpty() || this.contentType == null || this.contentType.trim().isEmpty()) {
 				System.err.println("Unable to send notification for POST method, content type and body are mandatory");
 				isValid = false;
 			}
 		}
+		if(this.url == null || this.url.trim().isEmpty()) {
+			System.err.println("Url must be set in order to perform the request");
+			isValid = false;
+		}
+			
 		return isValid;
 	}
 
@@ -134,16 +148,16 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
      */
 	private boolean handleResponse(HttpResponse response) {
 		if(response != null && HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
-			System.out.println("Notification succesfully sent");
+			sendToPrint("Notification succesfully sent");
 			try {
 				//This validation is due to the possibility that the response is actually empty, 
 				//therefore there is no charset and the log of the body will not be attempted
 				if(response.getEntity().getContentType() != null) {
 					String charset = EntityUtils.getContentCharSet(response.getEntity());
-					System.out.println("Response Body : " + convert(response.getEntity().getContent(), Charset.forName(charset)));
+					sendToPrint("Response Body : " + convert(response.getEntity().getContent(), Charset.forName(charset)));
 				}
 			} catch (Exception e) {
-				System.out.println("Response Body could not be logged, but the request itself was successful");
+				sendToPrint("Response Body could not be logged, but the request itself was successful");
 				e.printStackTrace();
 			}
 			return true;
@@ -170,6 +184,12 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 			}
 		}
 		return stringBuilder.toString();
+	}
+	
+	private void sendToPrint(String message) {
+		if(this.debugFlag) {
+			System.out.println(message);
+		}
 	}
 	
 }
