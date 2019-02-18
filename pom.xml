@@ -12,6 +12,8 @@
 		<unirest.version>1.4.9</unirest.version>
 		<rundeck-plugin.version>1.2</rundeck-plugin.version>
 		<powermock.version>1.7.1</powermock.version>
+	    <maven.compiler.source>1.8</maven.compiler.source>
+    	<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -21,10 +23,9 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.mashape.unirest</groupId>
-			<artifactId>unirest-java</artifactId>
-			<version>${unirest.version}</version>
-			<scope>compile</scope>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpclient</artifactId>
+		    <version>4.1.1</version>
 		</dependency>
 		<dependency>
 		   <groupId>org.powermock</groupId>
@@ -73,7 +74,7 @@
 							<Rundeck-Plugin-File-Version>${project.version}</Rundeck-Plugin-File-Version>
 							<Rundeck-Plugin-Version>${rundeck-plugin.version}</Rundeck-Plugin-Version>
 							<Rundeck-Plugin-Archive>true</Rundeck-Plugin-Archive>
-							<Rundeck-Plugin-libs>lib/commons-codec-1.10.jar lib/commons-logging-1.2.jar lib/unirest-java-1.4.9.jar lib/httpclient-4.5.2.jar lib/httpcore-4.4.4.jar lib/httpasyncclient-4.1.1.jar lib/httpcore-nio-4.4.4.jar lib/httpmime-4.5.2.jar lib/json-20160212.jar</Rundeck-Plugin-libs>
+							<Rundeck-Plugin-libs>lib/commons-codec-1.10.jar lib/commons-logging-1.2.jar lib/httpclient-4.1.1.jar lib/httpcore-4.1.jar</Rundeck-Plugin-libs>
 						</manifestEntries>
 					</archive>
 				</configuration>

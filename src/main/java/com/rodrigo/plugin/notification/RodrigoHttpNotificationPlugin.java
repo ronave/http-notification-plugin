@@ -1,8 +1,19 @@
 package com.rodrigo.plugin.notification;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
 import java.util.Map;
 
 import org.apache.commons.httpclient.HttpStatus;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.util.EntityUtils;
 
 import com.dtolabs.rundeck.core.plugins.Plugin;
 import com.dtolabs.rundeck.plugins.ServiceNameConstants;
@@ -11,11 +22,6 @@ import com.dtolabs.rundeck.plugins.descriptions.PluginProperty;
 import com.dtolabs.rundeck.plugins.descriptions.SelectValues;
 import com.dtolabs.rundeck.plugins.descriptions.TextArea;
 import com.dtolabs.rundeck.plugins.notification.NotificationPlugin;
-import com.mashape.unirest.http.HttpMethod;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 
 /**
  * Developed by RoNaVe
@@ -81,7 +87,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
      */
 	private boolean validateInputs() {
 		boolean isValid = true;
-		if(this.methodType.equals(HttpMethod.POST.toString())) {
+		if("POST".equals(this.methodType)) {
 			if(this.body.trim().isEmpty() || this.contentType.trim().isEmpty()) {
 				System.err.println("Unable to send notification for POST method, content type and body are mandatory");
 				isValid = false;
@@ -95,20 +101,28 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
      * @return true if ok 
      */
 	private boolean sendRequest() {
+		DefaultHttpClient httpClient = null;
 		try {
-			HttpResponse<JsonNode> response = null;
-			if(this.methodType.equals(HttpMethod.POST.toString())) {
-				response = Unirest.post(this.url).header("Content-Type", this.contentType).body(this.body).asJson();
-			}else if(this.methodType.equals(HttpMethod.GET.toString())) {
-				response = Unirest.get(url).asJson();
+			httpClient = new DefaultHttpClient();
+			HttpResponse response = null;
+			if("POST".equals(this.methodType)) {
+				HttpPost postRequest = new HttpPost(this.url);
+				postRequest.addHeader("content-type", this.contentType);
+				postRequest.setEntity(new StringEntity(this.body));
+				response = httpClient.execute(postRequest);
+			}else if("GET".equals(this.methodType)) {
+				HttpGet getRequest = new HttpGet(this.url);
+				response = httpClient.execute(getRequest);
 			}else {
 				System.err.println("Unsupported method type : " + this.methodType);
 				return false;
 			}
 			handleResponse(response);
-		} catch (UnirestException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			return false;
+		}finally {
+			httpClient.getConnectionManager().shutdown();
 		}
 		return true;
 	}
@@ -118,15 +132,44 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
      * @param response , response from the requested url
      * @return true if ok 
      */
-	private boolean handleResponse(HttpResponse<JsonNode> response) {
-		if(response != null && HttpStatus.SC_OK == response.getStatus()) {
+	private boolean handleResponse(HttpResponse response) {
+		if(response != null && HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
 			System.out.println("Notification succesfully sent");
-			System.out.println("Response Body : " + response.getBody());
+			try {
+				//This validation is due to the possibility that the response is actually empty, 
+				//therefore there is no charset and the log of the body will not be attempted
+				if(response.getEntity().getContentType() != null) {
+					String charset = EntityUtils.getContentCharSet(response.getEntity());
+					System.out.println("Response Body : " + convert(response.getEntity().getContent(), Charset.forName(charset)));
+				}
+			} catch (Exception e) {
+				System.out.println("Response Body could not be logged, but the request itself was successful");
+				e.printStackTrace();
+			}
 			return true;
 		}else {
-			System.err.println("Error sending notification : " + response.getBody());
+			System.err.println("Error sending notification with status code : " + response.getStatusLine().getStatusCode());
 			return false;
 		}
+	}
+	
+	/**
+     * Used to convert the body content to string
+     * @param inputStream , stream to be converted to string for logging purposes
+     * @param charset , charset
+     * @return String body content
+     */
+	private String convert(InputStream inputStream, Charset charset) throws IOException {
+		 
+		StringBuilder stringBuilder = new StringBuilder();
+		String line = null;
+		
+		try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, charset))) {	
+			while ((line = bufferedReader.readLine()) != null) {
+				stringBuilder.append(line);
+			}
+		}
+		return stringBuilder.toString();
 	}
 	
 }
