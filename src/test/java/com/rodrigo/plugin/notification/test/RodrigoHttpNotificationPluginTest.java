@@ -82,6 +82,15 @@ public class RodrigoHttpNotificationPluginTest {
 		assertFalse(postNotification);
 	}
 	
+	@Test
+	public void validateContentType() throws Exception {
+		RodrigoHttpNotificationPlugin spyObject = PowerMockito.spy(new RodrigoHttpNotificationPlugin("POST", "http://localhost:8080/greeting", 
+				"{\"id\": 3,\"content\": \"Hello, World!\"}", "application/jsonasdasd", true));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(RodrigoHttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
+		assertTrue(postNotification);
+	}
+	
 	//You can uncomment this in case you would like to run a test to a remote notification service
 	//So you can use this as an example :)
 //	@Test

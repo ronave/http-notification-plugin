@@ -1,10 +1,7 @@
 package com.rodrigo.plugin.notification;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.HttpStatus;
@@ -59,6 +56,8 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 	@com.dtolabs.rundeck.plugins.descriptions.SelectValues(values={"true"}, dynamicValues=true)
 	private boolean debugFlag;
 	
+	private static final List<String> VALID_CONTENT_TYPES = Arrays.asList("application/json", "application/xml");
+	
 	
 	/**
      * Constructor for better junit.
@@ -100,6 +99,9 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 			if(this.body == null || this.body.trim().isEmpty() || this.contentType == null || this.contentType.trim().isEmpty()) {
 				System.err.println("Unable to send notification for POST method, content type and body are mandatory");
 				isValid = false;
+			}else if(!VALID_CONTENT_TYPES.stream().anyMatch(content -> content.equals(this.contentType))) {
+				System.err.println("Unable to send notification for POST method, unsupported content type");
+				isValid = false;
 			}
 		}
 		if(this.url == null || this.url.trim().isEmpty()) {
@@ -112,7 +114,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 
 	/**
      * Performs the request
-     * @return true if ok 
+     * @return true if ok
      */
 	private boolean sendRequest() {
 		DefaultHttpClient httpClient = null;
@@ -121,7 +123,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 			HttpResponse response = null;
 			if("POST".equals(this.methodType)) {
 				HttpPost postRequest = new HttpPost(this.url);
-				postRequest.addHeader("content-type", this.contentType);
+				postRequest.addHeader("content-type", this.contentType.trim());
 				postRequest.setEntity(new StringEntity(this.body));
 				response = httpClient.execute(postRequest);
 			}else if("GET".equals(this.methodType)) {
@@ -142,19 +144,22 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 	}
 
 	/**
-     * It handles the response, anything but status 200 is considered an error and it will as such
+     * It handles the response. Any response status equal or greater than 200 and lower than 300 it will be considered as successful
      * @param response , response from the requested url
      * @return true if ok 
      */
 	private boolean handleResponse(HttpResponse response) {
-		if(response != null && HttpStatus.SC_OK == response.getStatusLine().getStatusCode()) {
+		if(response != null && HttpStatus.SC_OK <= response.getStatusLine().getStatusCode()
+				&& response.getStatusLine().getStatusCode() < HttpStatus.SC_MULTIPLE_CHOICES) {
 			sendToPrint("Notification succesfully sent");
 			try {
 				//This validation is due to the possibility that the response is actually empty, 
 				//therefore there is no charset and the log of the body will not be attempted
-				if(response.getEntity().getContentType() != null) {
-					String charset = EntityUtils.getContentCharSet(response.getEntity());
-					sendToPrint("Response Body : " + convert(response.getEntity().getContent(), Charset.forName(charset)));
+				if(response.getEntity() != null) {
+					String responseAsString = EntityUtils.toString(response.getEntity());
+					sendToPrint("Response Body : " + responseAsString);
+				}else {
+					sendToPrint("Response entity is null, even though the response is acceptable");
 				}
 			} catch (Exception e) {
 				sendToPrint("Response Body could not be logged, but the request itself was successful");
@@ -165,25 +170,6 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 			System.err.println("Error sending notification with status code : " + response.getStatusLine().getStatusCode());
 			return false;
 		}
-	}
-	
-	/**
-     * Used to convert the body content to string
-     * @param inputStream , stream to be converted to string for logging purposes
-     * @param charset , charset
-     * @return String body content
-     */
-	private String convert(InputStream inputStream, Charset charset) throws IOException {
-		 
-		StringBuilder stringBuilder = new StringBuilder();
-		String line = null;
-		
-		try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, charset))) {	
-			while ((line = bufferedReader.readLine()) != null) {
-				stringBuilder.append(line);
-			}
-		}
-		return stringBuilder.toString();
 	}
 	
 	private void sendToPrint(String message) {
