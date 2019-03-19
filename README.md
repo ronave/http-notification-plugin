@@ -15,14 +15,14 @@ It can perform GET and POST method
 
 Produces:
 
-	target/rodrigo-notification-0.0.1-SNAPSHOT.jar
+	target/http-notification-0.0.1-SNAPSHOT
 
 
 ## Install
 
 First, download the "Rundeck Launcher" [Rundeck](http://rundeck.org/downloads.html)
 
-    cp target/rodrigo-notification-0.0.1-SNAPSHOT.jar ${rundeck_home}/libext
+    cp target/http-notification-0.0.1-SNAPSHOT ${rundeck_home}/libext
 
 ## Run rundeck
 
