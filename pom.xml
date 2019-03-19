@@ -3,10 +3,10 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>rodrigo.plugin</groupId>
-	<artifactId>rodrigo-notification</artifactId>
+	<artifactId>http-notification</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>rodrigo-notification-plugin</name>
-	<description>To be presented as a rundeck candidate</description>
+	<description>Http notification plugin for rundeck</description>
 	<properties>
 		<rundeck-core.version>3.0.13-20190123</rundeck-core.version>
 		<unirest.version>1.4.9</unirest.version>

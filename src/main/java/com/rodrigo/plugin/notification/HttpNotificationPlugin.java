@@ -25,9 +25,9 @@ import com.dtolabs.rundeck.plugins.notification.NotificationPlugin;
  * Notification plugin that can handle POST or GET request.
  * Body for POST request are only xml or json
  */
-@Plugin(service=ServiceNameConstants.Notification, name="RodrigoNotificationPlugin")
-@PluginDescription(title="Rodrigo Http Notification", description="Http notification plugin.")
-public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
+@Plugin(service=ServiceNameConstants.Notification, name="HttpNotificationPlugin")
+@PluginDescription(title="Http Notification", description="Http notification plugin.")
+public class HttpNotificationPlugin implements NotificationPlugin {
 
     /**
      * Method types currently supported, it doesnt have much sense to add another
@@ -66,7 +66,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
      * @param body To be used along with the POST method
      * @param contentType To be used along with the POST method
      */
-	public RodrigoHttpNotificationPlugin(String methodType, String url, String body, String contentType, boolean debugFlag) {
+	public HttpNotificationPlugin(String methodType, String url, String body, String contentType, boolean debugFlag) {
 		this.methodType = methodType;
 		this.url = url;
 		this.body = body;
@@ -74,7 +74,7 @@ public class RodrigoHttpNotificationPlugin implements NotificationPlugin {
 		this.debugFlag = debugFlag;
 	}
 
-	public RodrigoHttpNotificationPlugin() {
+	public HttpNotificationPlugin() {
 		
 	}
 
