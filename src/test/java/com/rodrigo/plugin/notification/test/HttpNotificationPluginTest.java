@@ -21,8 +21,8 @@ public class HttpNotificationPluginTest {
 
 	@Test
 	public void notificationTestGET() throws Exception {
-		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true));
-		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "validateInputs")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertTrue(postNotification);
@@ -30,8 +30,8 @@ public class HttpNotificationPluginTest {
 	
 	@Test
 	public void notificationTestGETWithError() throws Exception {
-		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true));
-		PowerMockito.doReturn(false).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true, true, 2));
+		PowerMockito.doReturn(false).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "validateInputs")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertFalse(postNotification);
@@ -39,8 +39,8 @@ public class HttpNotificationPluginTest {
 	
 	@Test
 	public void notificationTestGETWithError2() throws Exception {
-		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true));
-		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		PowerMockito.doReturn(false).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "validateInputs")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertFalse(postNotification);
@@ -49,8 +49,17 @@ public class HttpNotificationPluginTest {
 	@Test
 	public void notificationTestPOST() throws Exception {
 		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("POST", "http://localhost:8080/greeting", 
-				"{\"id\": 3,\"content\": \"Hello, World!\"}", "application/json", true));
-		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+				"{\"id\": 3,\"content\": \"Hello, World!\"}", "application/json", true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
+		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
+		assertTrue(postNotification);
+	}
+	
+	@Test
+	public void notificationTestPOSTReplaceTrigger() throws Exception {
+		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("POST", "http://localhost:8080/greeting", 
+				"{\"id\": 3,\"content\": \"Hello, World! ${trigger} \"}", "application/json", true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertTrue(postNotification);
 	}
@@ -58,8 +67,8 @@ public class HttpNotificationPluginTest {
 	@Test
 	public void notificationTestPOSTNoBody() throws Exception {
 		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("POST", "http://localhost:8080/greeting", 
-				"", "application/json", true));
-		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+				"", "application/json", true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertFalse(postNotification);
 	}
@@ -67,8 +76,8 @@ public class HttpNotificationPluginTest {
 	@Test
 	public void notificationTestGETNoUrl() throws Exception {
 		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("GET", null, 
-				"", "application/json", true));
-		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+				"", "application/json", true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertFalse(postNotification);
 	}
@@ -76,8 +85,8 @@ public class HttpNotificationPluginTest {
 	@Test
 	public void notificationTestPOSTNoUrl() throws Exception {
 		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("POST", null, 
-				"", "application/json", true));
-		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+				"", "application/json", true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertFalse(postNotification);
 	}
@@ -85,8 +94,8 @@ public class HttpNotificationPluginTest {
 	@Test
 	public void validateContentType() throws Exception {
 		HttpNotificationPlugin spyObject = PowerMockito.spy(new HttpNotificationPlugin("POST", "http://localhost:8080/greeting", 
-				"{\"id\": 3,\"content\": \"Hello, World!\"}", "application/jsonasdasd", true));
-		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "sendRequest")).withNoArguments();
+				"{\"id\": 3,\"content\": \"Hello, World!\"}", "application/jsonasdasd", true, true, 2));
+		PowerMockito.doReturn(true).when(spyObject, PowerMockito.method(HttpNotificationPlugin.class, "buildRequest")).withNoArguments();
 		boolean postNotification = spyObject.postNotification("success", new HashMap<String, String>(), new HashMap<String, String>());
 		assertFalse(postNotification);
 	}
@@ -95,7 +104,7 @@ public class HttpNotificationPluginTest {
 	//So you can use this as an example :)
 //	@Test
 //	public void postNotificationTestGET() {
-//		HttpNotificationPlugin plugin = new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true);
+//		HttpNotificationPlugin plugin = new HttpNotificationPlugin("GET", "http://localhost:8080/greeting", null, null, true, true, 2);
 //		assertTrue(plugin.postNotification(new String(), new HashedMap(), new HashedMap()));
 //	}
 //	

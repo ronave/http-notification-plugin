@@ -1,5 +1,7 @@
 package com.rodrigo.plugin.notification;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -8,8 +10,10 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 import com.dtolabs.rundeck.core.plugins.Plugin;
@@ -56,6 +60,13 @@ public class HttpNotificationPlugin implements NotificationPlugin {
 	@com.dtolabs.rundeck.plugins.descriptions.SelectValues(values={"true"}, dynamicValues=true)
 	private boolean debugFlag;
 	
+	@PluginProperty(name="retry",title="Retry Flag", description="Check to retry in case of a conectivity issue", defaultValue="false")
+	@com.dtolabs.rundeck.plugins.descriptions.SelectValues(values={"true"}, dynamicValues=true)
+	private boolean retry;
+	
+	@PluginProperty(name="maximumRetries",title="Max Retries", description="Sets the maximum number of retries", defaultValue="1")
+	private int maximumRetries;
+	
 	private static final List<String> VALID_CONTENT_TYPES = Arrays.asList("application/json", "application/xml");
 	
 	
@@ -66,12 +77,14 @@ public class HttpNotificationPlugin implements NotificationPlugin {
      * @param body To be used along with the POST method
      * @param contentType To be used along with the POST method
      */
-	public HttpNotificationPlugin(String methodType, String url, String body, String contentType, boolean debugFlag) {
+	public HttpNotificationPlugin(String methodType, String url, String body, String contentType, boolean debugFlag, boolean retry, int maximumRetries) {
 		this.methodType = methodType;
 		this.url = url;
 		this.body = body;
 		this.contentType = contentType;
 		this.debugFlag = debugFlag;
+		this.retry = retry;
+		this.maximumRetries = maximumRetries;
 	}
 
 	public HttpNotificationPlugin() {
@@ -82,9 +95,12 @@ public class HttpNotificationPlugin implements NotificationPlugin {
 	public boolean postNotification(String trigger, Map executionData, Map config) {
 		sendToPrint("Event trigger : " + trigger);
 		sendToPrint("Configuration : " + config);
+		if(this.body != null) {
+			this.body = this.body.replace("${trigger}", trigger);
+		}
 		boolean isOk = true;
 		if(isOk = validateInputs()) {
-			isOk = sendRequest();
+			isOk = buildRequest();
 		}
 		return isOk;
 	}
@@ -113,34 +129,50 @@ public class HttpNotificationPlugin implements NotificationPlugin {
 	}
 
 	/**
-     * Performs the request
+     * Build the request to be send
      * @return true if ok
      */
-	private boolean sendRequest() {
-		DefaultHttpClient httpClient = null;
-		try {
-			httpClient = new DefaultHttpClient();
-			HttpResponse response = null;
-			if("POST".equals(this.methodType)) {
-				HttpPost postRequest = new HttpPost(this.url);
-				postRequest.addHeader("content-type", this.contentType.trim());
+	private boolean buildRequest() {
+		HttpResponse response = null;
+		if("POST".equals(this.methodType)) {
+			HttpPost postRequest = new HttpPost(this.url);
+			postRequest.addHeader("content-type", this.contentType.trim());
+			try {
 				postRequest.setEntity(new StringEntity(this.body));
-				response = httpClient.execute(postRequest);
-			}else if("GET".equals(this.methodType)) {
-				HttpGet getRequest = new HttpGet(this.url);
-				response = httpClient.execute(getRequest);
-			}else {
-				System.err.println("Unsupported method type : " + this.methodType);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+				System.err.println("An error has occur while trying to build the entity for the post request, using body string : " + this.body);
 				return false;
 			}
-			handleResponse(response);
-		} catch (Exception e) {
-			e.printStackTrace();
+			executeRequest(postRequest, 1);
+		}else if("GET".equals(this.methodType)) {
+			HttpGet getRequest = new HttpGet(this.url);
+			executeRequest(getRequest, 1);
+		}else {
+			System.err.println("Unsupported method type : " + this.methodType);
 			return false;
-		}finally {
-			httpClient.getConnectionManager().shutdown();
 		}
+		handleResponse(response);
 		return true;
+	}
+	
+	/**
+     * Performs the request and also handles the retry if is set that way
+     * @return void
+     */
+	private void executeRequest(HttpRequestBase request, int maximumRetries) {
+			try (CloseableHttpClient httpClient = HttpClientBuilder.create().build()) {
+				sendToPrint("Attempt number : " + maximumRetries);
+				HttpResponse response = httpClient.execute(request);
+				handleResponse(response);
+			} catch (IOException e) {
+				System.err.println("Exception while trying to perform the request");
+				e.printStackTrace();
+				if(this.retry && maximumRetries <= this.maximumRetries) {
+					sendToPrint("Executin retry");
+					executeRequest(request, maximumRetries+1);
+				}
+			}
 	}
 
 	/**
@@ -167,7 +199,11 @@ public class HttpNotificationPlugin implements NotificationPlugin {
 			}
 			return true;
 		}else {
-			System.err.println("Error sending notification with status code : " + response.getStatusLine().getStatusCode());
+			if(response != null && response.getStatusLine() != null) {
+				System.err.println("Error sending notification with status code : " + response.getStatusLine().getStatusCode());
+			}else {
+				System.err.println("Error sending notification and response object is null, no more data is available to describe the error");
+			}
 			return false;
 		}
 	}
